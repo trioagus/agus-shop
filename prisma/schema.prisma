@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String    @id @default(cuid())
+  name                String
+  email               String
+  password            String
+  role                Role
+  resetToken          String?
+  resetTokenExpiresAt DateTime?
+
+  cart Cart[]
+
+  @@map("users")
+}
+
+model Category {
+  id   String @id @default(cuid())
+  name String
+
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  image       String?
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  stock       Int
+  description String   @db.Text
+  price       Int
+
+  cart Cart[]
+
+  @@map("products")
+}
+
+model Cart {
+  id         String  @id @default(cuid())
+  userId     String
+  user       User    @relation(fields: [userId], references: [id])
+  productId  String
+  product    Product @relation(fields: [productId], references: [id])
+  quantity   Int
+  totalPrice Int
+}
+
+model Checkout {
+  id         String    @id @default(cuid())
+  cart       Json
+  totalPrice Int
+  quantity   Int
+  payment    Payment[]
+
+  @@map("checkouts")
+}
+
+model Payment {
+  id          String   @id @default(cuid())
+  checkoutId  String
+  checkout    Checkout @relation(fields: [checkoutId], references: [id])
+  status      Status
+  paymentDate DateTime
+  amount      Int
+}
+
+enum Status {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum Role {
+  USER
+  ADMIN
+}
